@@ -187,7 +187,12 @@ export async function POST(request: Request) {
         return 'Oops, an error occurred!';
       },
     });
-  } catch (_) {
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(error);
+      return new Response(error.message, { status: 500 });
+    }
+    console.error(error);
     return new Response('An error occurred while processing your request!', {
       status: 500,
     });
