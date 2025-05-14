@@ -1,5 +1,5 @@
-import type { ArtifactKind } from '@/components/artifact';
-import type { Geo } from '@vercel/functions';
+import type { ArtifactKind } from "@/components/artifact";
+import type { Geo } from "@vercel/functions";
 
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
@@ -32,14 +32,30 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 Do not update document right after creating it. Wait for user feedback or request to update it.
 `;
 
-export const regularPrompt =
-  'You are a friendly assistant! Keep your responses concise and helpful.';
+export const regularPrompt = `
+You are an AI research assistant designed to help students understand and analyze their research papers. The user will upload a PDF of their paper, and you should respond to their questions based strictly on the content of the uploaded document.
+For each response:
+
+Direct Responses: Answer based solely on the contents of the uploaded paper. Do not invent information that isn't present in the document.
+Citations: Include brief in-text citations (e.g., Smith, 2024) when referencing specific content from the paper.
+Harvard-Style Bibliography: Conclude each substantive response with a full citation in Harvard referencing style based on the metadata or first few pages of the uploaded document.
+Related Research Guidance: Instead of linking to specific papers, provide general areas of research or search terms the user could explore. For example: "To expand on this topic, you might search for recent studies on [topic] in databases like Google Scholar, PubMed, or your university's library resources."
+Clarity Analysis: When asked, identify sections in the paper that could benefit from more clarity, presenting contradictory information, or lacking sufficient evidence—but only if such issues actually exist in the paper.
+Terminology Assistance: Explain key terms from the paper when relevant but do not create external links to definitions. Instead, provide clear explanations using information from the paper itself.
+Knowledge Limitations: Make it clear when you cannot provide information because it's not contained in the uploaded document. Never fabricate paper titles, authors, journals, or URLs.
+
+Example Interaction:
+User: What is the main conclusion of my paper?
+AI: Based on your uploaded paper, the main conclusion is that integrating AI into educational systems significantly improves student outcomes, particularly in mathematics and language acquisition (Smith, 2024).
+Citation:
+Smith, J. (2024) Artificial Intelligence in Education: A Comprehensive Study, Journal of Educational Technology, 45(2), pp. 118-135.
+`;
 
 export interface RequestHints {
-  latitude: Geo['latitude'];
-  longitude: Geo['longitude'];
-  city: Geo['city'];
-  country: Geo['country'];
+  latitude: Geo["latitude"];
+  longitude: Geo["longitude"];
+  city: Geo["city"];
+  country: Geo["country"];
 }
 
 export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
@@ -59,7 +75,7 @@ export const systemPrompt = ({
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
 
-  if (selectedChatModel === 'chat-model-reasoning') {
+  if (selectedChatModel === "chat-model-reasoning") {
     return `${regularPrompt}\n\n${requestPrompt}`;
   } else {
     return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
@@ -98,24 +114,24 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 
 export const updateDocumentPrompt = (
   currentContent: string | null,
-  type: ArtifactKind,
+  type: ArtifactKind
 ) =>
-  type === 'text'
+  type === "text"
     ? `\
 Improve the following contents of the document based on the given prompt.
 
 ${currentContent}
 `
-    : type === 'code'
-      ? `\
+    : type === "code"
+    ? `\
 Improve the following code snippet based on the given prompt.
 
 ${currentContent}
 `
-      : type === 'sheet'
-        ? `\
+    : type === "sheet"
+    ? `\
 Improve the following spreadsheet based on the given prompt.
 
 ${currentContent}
 `
-        : '';
+    : "";
