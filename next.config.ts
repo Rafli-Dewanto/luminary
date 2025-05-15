@@ -3,8 +3,11 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      config.externals = config.externals || [];
-      config.externals.push("pspdfkit");
+      // Ensure PSPDFKit is included in the client build
+      config.resolve.alias = {
+        ...(config.resolve.alias || {}),
+        pspdfkit: require.resolve("pspdfkit"),
+      };
     }
 
     return config;
