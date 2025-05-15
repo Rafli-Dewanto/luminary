@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Copy, FileText } from "lucide-react"
 import { toast } from "./toast"
+import { Show } from "./shared/show"
 
 const citationStyles = ["APA", "Harvard", "MLA", "Chicago", "IEEE", "Vancouver", "Turabian"]
 
@@ -46,7 +47,7 @@ export default function CitationPage() {
       })
     } catch (error) {
       if (error instanceof Error) {
-        console.error(error)
+        console.error('[ERROR]: Failed to generate citation:', error);
         toast({
           type: "error",
           description: error.message,
@@ -134,7 +135,7 @@ export default function CitationPage() {
             </Button>
           </CardContent>
 
-          {citation && (
+          <Show when={!!citation}>
             <CardFooter className="flex flex-col items-start">
               <div className="w-full p-4 rounded-md bg-muted">
                 <div className="flex justify-between items-center mb-2">
@@ -147,7 +148,7 @@ export default function CitationPage() {
                 <p className="text-sm break-words">{citation}</p>
               </div>
             </CardFooter>
-          )}
+          </Show>
         </Card>
       </div>
     </div>

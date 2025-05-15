@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS "Message_v2" (
 	"role" varchar NOT NULL,
 	"parts" json NOT NULL,
 	"attachments" json NOT NULL,
+	"annotations" json[] DEFAULT '{}' NOT NULL,
 	"createdAt" timestamp NOT NULL
 );
 --> statement-breakpoint

@@ -1,28 +1,27 @@
 'use client';
 
-import type { Attachment, UIMessage } from 'ai';
-import { useChat } from '@ai-sdk/react';
-import { useEffect, useState } from 'react';
-import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
+import { useArtifactSelector } from '@/hooks/use-artifact';
 import type { Vote } from '@/lib/db/schema';
 import { fetcher, generateUUID } from '@/lib/utils';
-import { Artifact } from './artifact';
-import { MultimodalInput } from './multimodal-input';
-import { Messages } from './messages';
-import type { VisibilityType } from './visibility-selector';
-import { useArtifactSelector } from '@/hooks/use-artifact';
-import { unstable_serialize } from 'swr/infinite';
-import { getChatHistoryPaginationKey } from './sidebar-history';
-import { toast } from './toast';
+import { useChat } from '@ai-sdk/react';
+import type { Attachment, UIMessage } from 'ai';
 import type { Session } from 'next-auth';
 import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import useSWR, { useSWRConfig } from 'swr';
+import { unstable_serialize } from 'swr/infinite';
+import { Artifact } from './artifact';
+import { Messages } from './messages';
+import { MultimodalInput } from './multimodal-input';
+import { getChatHistoryPaginationKey } from './sidebar-history';
+import { toast } from './toast';
+import type { VisibilityType } from './visibility-selector';
 
 import dynamic from 'next/dynamic';
 const PDFViewer = dynamic(() => import('../components/pdf-viewer'), { ssr: false })
 
 import { Show } from './shared/show';
-import ClientOnly from './shared/client-only';
 
 export function Chat({
   id,
@@ -147,7 +146,7 @@ export function Chat({
 
         <Show when={Boolean(attachmentUrl) && attachmentUrl !== ''}>
           <div className="flex-1 md:w-1/2 overflow-y-auto bg-gray-100">
-            <PDFViewer url={attachmentUrl as string} />
+            <PDFViewer chatId={id} url={attachmentUrl as string} />
           </div>
         </Show>
       </div>

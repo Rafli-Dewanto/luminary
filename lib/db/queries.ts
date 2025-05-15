@@ -389,9 +389,31 @@ export async function getSuggestionsByDocumentId({
 
 export async function getMessageById({ id }: { id: string }) {
   try {
-    return await db.select().from(message).where(eq(message.id, id));
+    const [selectedMessage] = await db
+      .select()
+      .from(message)
+      .where(eq(message.id, id));
+    return selectedMessage;
   } catch (error) {
     console.error("Failed to get message by id from database");
+    throw error;
+  }
+}
+
+export async function updateMessageAnnotations({
+  messageId,
+  annotations,
+}: {
+  messageId: string;
+  annotations: Array<any>;
+}) {
+  try {
+    await db
+      .update(message)
+      .set({ pdfAnnotations: annotations })
+      .where(eq(message.id, messageId));
+  } catch (error) {
+    console.error("Failed to update message annotations in database");
     throw error;
   }
 }

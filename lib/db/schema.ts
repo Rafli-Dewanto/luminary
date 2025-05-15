@@ -56,6 +56,7 @@ export const message = pgTable("Message_v2", {
   parts: json("parts").notNull(),
   attachments: json("attachments").notNull(),
   createdAt: timestamp("createdAt").notNull(),
+  pdfAnnotations: json("pdfAnnotations").notNull(),
 });
 
 export interface PDFAnnotation {
