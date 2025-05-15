@@ -1,6 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getMessageById, updateMessageAnnotations } from "@/lib/db/queries";
-import type { Annotation } from "pspdfkit";
+import { getMessageById } from "@/lib/db/queries";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -22,35 +21,5 @@ export async function GET(request: Request) {
     return new Response("Message not found", { status: 404 });
   }
 
-  return Response.json(message.pdfAnnotations || [], { status: 200 });
-}
-
-export async function POST(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const messageId = searchParams.get("messageId");
-
-  if (!messageId) {
-    return new Response("Missing messageId", { status: 400 });
-  }
-
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  const message = await getMessageById({ id: messageId });
-
-  if (!message) {
-    return new Response("Message not found", { status: 404 });
-  }
-
-  const annotations = (await request.json()) as Annotation[];
-
-  await updateMessageAnnotations({
-    messageId,
-    annotations,
-  });
-
-  return Response.json(annotations, { status: 200 });
+  return Response.json(message || [], { status: 200 });
 }

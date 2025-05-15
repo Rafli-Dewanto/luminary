@@ -7,6 +7,7 @@ import PDFViewer from './pdf-viewer';
 interface PDFAnnotationProps {
   url: string;
   className?: string;
+  chatId: string;
   onAnnotationChange?: (annotations: any[]) => void;
 }
 
@@ -14,6 +15,7 @@ export function PDFAnnotation({
   url,
   className,
   onAnnotationChange,
+  chatId
 }: PDFAnnotationProps) {
   const [annotations, setAnnotations] = useState<any[]>([]);
 
@@ -32,7 +34,7 @@ export function PDFAnnotation({
       )}
     >
       <div className="relative flex-1 overflow-hidden">
-        <PDFViewer url={url} onAnnotationChange={handleAnnotationChange} />
+        <PDFViewer chatId={chatId} url={url} onAnnotationChange={handleAnnotationChange} />
       </div>
     </div>
   );

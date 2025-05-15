@@ -203,7 +203,6 @@ export async function saveMessages({
       parts: msg.parts,
       attachments: msg.attachments,
       createdAt: msg.createdAt,
-      pdfAnnotations: msg.pdfAnnotations || [],
     }));
     return await db.insert(message).values(messagesToSave);
   } catch (error) {
@@ -396,24 +395,6 @@ export async function getMessageById({ id }: { id: string }) {
     return selectedMessage;
   } catch (error) {
     console.error("Failed to get message by id from database");
-    throw error;
-  }
-}
-
-export async function updateMessageAnnotations({
-  messageId,
-  annotations,
-}: {
-  messageId: string;
-  annotations: Array<any>;
-}) {
-  try {
-    await db
-      .update(message)
-      .set({ pdfAnnotations: annotations })
-      .where(eq(message.id, messageId));
-  } catch (error) {
-    console.error("Failed to update message annotations in database");
     throw error;
   }
 }

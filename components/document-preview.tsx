@@ -27,12 +27,14 @@ interface DocumentPreviewProps {
   isReadonly: boolean;
   result?: any;
   args?: any;
+  chatId: string;
 }
 
 export function DocumentPreview({
   isReadonly,
   result,
   args,
+  chatId,
 }: DocumentPreviewProps) {
   const { artifact, setArtifact } = useArtifact();
 
@@ -103,6 +105,7 @@ export function DocumentPreview({
   if (document.kind === 'text') {
     return (
       <PDFAnnotation
+        chatId={chatId}
         url={document.content ?? "No content"}
         onAnnotationChange={(annotations) => {
           if (annotations.length > 0) {

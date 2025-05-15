@@ -104,7 +104,6 @@ export async function POST(request: Request) {
           parts: message.parts,
           attachments: message.experimental_attachments ?? [],
           createdAt: new Date(),
-          pdfAnnotations: JSON.parse("{}"),
         },
       ],
     });
@@ -158,7 +157,6 @@ export async function POST(request: Request) {
                   messages: [
                     {
                       id: assistantId,
-                      pdfAnnotations: JSON.parse("{}"),
                       chatId: id,
                       role: assistantMessage.role,
                       parts: assistantMessage.parts,

@@ -56,7 +56,6 @@ export const message = pgTable("Message_v2", {
   parts: json("parts").notNull(),
   attachments: json("attachments").notNull(),
   createdAt: timestamp("createdAt").notNull(),
-  pdfAnnotations: json("pdfAnnotations").notNull(),
 });
 
 export interface PDFAnnotation {
@@ -76,9 +75,7 @@ export interface PDFAnnotation {
   createdAt: Date;
 }
 
-export type DBMessage = InferSelectModel<typeof message> & {
-  pdfAnnotations?: Array<PDFAnnotation>;
-};
+export type DBMessage = InferSelectModel<typeof message>
 
 // DEPRECATED: The following schema is deprecated and will be removed in the future.
 // Read the migration guide at https://github.com/vercel/ai-chatbot/blob/main/docs/04-migrate-to-parts.md
