@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "pnpm run copy-assets && pnpm run copy-pspdfkit && next build",
+    "build": "pnpm run clear-cache && pnpm run build-assets && next build",
     "copy-assets": "cp ./node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./public/",
     "copy-pspdfkit": "cp -R ./node_modules/pspdfkit/dist/pspdfkit-lib public/pspdfkit-lib",
+    "clear-cache": "rm -rf .next/cache",
+    "build-assets": "cp -R ./node_modules/pspdfkit/dist/pspdfkit-lib ./public/pspdfkit-lib && cp ./node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./public/",
     "start": "next start",
     "lint": "next lint && biome lint --write --unsafe",
     "lint:fix": "next lint --fix && biome lint --write --unsafe",
