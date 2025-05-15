@@ -35,15 +35,15 @@ export default function PDFViewer({ url, chatId, onAnnotationChange }: PDFViewer
                     instance = await PSPDFKit.load({
                         container,
                         document: url,
-                        baseUrl: `${window.location.origin}/`,
+                        baseUrl: `${window.location.origin}/pspdfkit-lib/`,
                     });
                 } else {
                     instance = await PSPDFKit.load({
                         container,
                         document: url,
-                        baseUrl: `${window.location.origin}/`,
+                        baseUrl: `${window.location.origin}/pspdfkit-lib/`,
                         // @ts-ignore - pspdfkit doesn't export the type for this
-                        instantJSON: savedAnnotations, 
+                        instantJSON: savedAnnotations,
                     });
                 }
 
