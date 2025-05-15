@@ -1,7 +1,7 @@
 'use client';
 
 import { redis } from '@/lib/redis';
-import type { Annotation, Instance } from 'pspdfkit';
+import { Annotation, Instance } from '@nutrient-sdk/viewer';
 import { useEffect, useRef, useState } from 'react';
 
 interface PDFViewerProps {
@@ -24,70 +24,72 @@ export default function PDFViewer({ url, chatId, onAnnotationChange }: PDFViewer
 
         const loadViewer = async () => {
             try {
-                const PSPDFKit = (await import('pspdfkit')).default;
+                const { NutrientViewer } = window;
                 const container = containerRef.current as HTMLElement;
 
                 // Load saved annotations from Redis
-                let instance: Instance | null = null;
-                const redisKey = `${chatId}:${url}`;
-                const savedAnnotations = await redis.get(redisKey);
-                if (!savedAnnotations) {
-                    instance = await PSPDFKit.load({
-                        container,
-                        document: url,
-                        baseUrl: `${window.location.origin}/pspdfkit-lib/`,
+                if (NutrientViewer && containerRef) {
+                    let instance: Instance | null = null;
+                    const redisKey = `${chatId}:${url}`;
+                    const savedAnnotations = await redis.get(redisKey);
+                    if (!savedAnnotations) {
+                        instance = await NutrientViewer.load({
+                            container,
+                            document: url,
+                            baseUrl: `${window.location.origin}/nutrient-viewer/`,
+                        });
+                    } else {
+                        instance = await NutrientViewer.load({
+                            container,
+                            document: url,
+                            baseUrl: `${window.location.origin}/nutrient-viewer/`,
+                            // @ts-ignore - pspdfkit doesn't export the type for this
+                            instantJSON: savedAnnotations,
+                        });
+                    }
+
+                    // Fetch existing annotations
+                    const existingAnnotations = await instance.getAnnotations(0);
+                    setAnnotations(existingAnnotations.toArray());
+
+                    // Listen for annotation changes
+                    instance.addEventListener('annotations.create', (createdAnnotations) => {
+                        const newAnnotations = createdAnnotations.toArray();
+                        setAnnotations((prev) => [...prev, ...newAnnotations]);
+
+                        if (onAnnotationChange) {
+                            onAnnotationChange([...annotations, ...newAnnotations]);
+                        }
                     });
-                } else {
-                    instance = await PSPDFKit.load({
-                        container,
-                        document: url,
-                        baseUrl: `${window.location.origin}/pspdfkit-lib/`,
-                        // @ts-ignore - pspdfkit doesn't export the type for this
-                        instantJSON: savedAnnotations,
+
+                    instance.addEventListener('annotations.delete', (deletedAnnotations) => {
+                        const deletedIds = deletedAnnotations.toArray().map((a) => a.id);
+                        const updatedAnnotations = annotations.filter((a) => !deletedIds.includes(a.id));
+                        setAnnotations(updatedAnnotations);
+
+                        if (onAnnotationChange) {
+                            onAnnotationChange(updatedAnnotations);
+                        }
                     });
+
+                    // Save annotations to Redis when changes occur
+                    const saveAnnotations = async () => {
+                        instance.save();
+                        const instantJSON = await instance.exportInstantJSON();
+                        await redis.set(redisKey, JSON.stringify(instantJSON));
+                        console.log("Annotations saved to Redis:", redisKey);
+                    };
+
+                    instance.addEventListener('annotations.create', saveAnnotations);
+                    instance.addEventListener('annotations.delete', saveAnnotations);
+                    instance.addEventListener('annotations.update', saveAnnotations);
+
+                    // Clean up on unload
+                    return () => {
+                        NutrientViewer.unload(container);
+                        console.log("PSPDFKit unloaded");
+                    };
                 }
-
-                // Fetch existing annotations
-                const existingAnnotations = await instance.getAnnotations(0);
-                setAnnotations(existingAnnotations.toArray());
-
-                // Listen for annotation changes
-                instance.addEventListener('annotations.create', (createdAnnotations) => {
-                    const newAnnotations = createdAnnotations.toArray();
-                    setAnnotations((prev) => [...prev, ...newAnnotations]);
-
-                    if (onAnnotationChange) {
-                        onAnnotationChange([...annotations, ...newAnnotations]);
-                    }
-                });
-
-                instance.addEventListener('annotations.delete', (deletedAnnotations) => {
-                    const deletedIds = deletedAnnotations.toArray().map((a) => a.id);
-                    const updatedAnnotations = annotations.filter((a) => !deletedIds.includes(a.id));
-                    setAnnotations(updatedAnnotations);
-
-                    if (onAnnotationChange) {
-                        onAnnotationChange(updatedAnnotations);
-                    }
-                });
-
-                // Save annotations to Redis when changes occur
-                const saveAnnotations = async () => {
-                    instance.save();
-                    const instantJSON = await instance.exportInstantJSON();
-                    await redis.set(redisKey, JSON.stringify(instantJSON));
-                    console.log("Annotations saved to Redis:", redisKey);
-                };
-
-                instance.addEventListener('annotations.create', saveAnnotations);
-                instance.addEventListener('annotations.delete', saveAnnotations);
-                instance.addEventListener('annotations.update', saveAnnotations);
-
-                // Clean up on unload
-                return () => {
-                    PSPDFKit.unload(container);
-                    console.log("PSPDFKit unloaded");
-                };
             } catch (error) {
                 console.error("Error loading PSPDFKit:", error);
             }

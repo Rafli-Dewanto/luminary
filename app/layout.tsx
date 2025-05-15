@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 
 import './globals.css';
 import { SessionProvider } from 'next-auth/react';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat.vercel.ai'),
@@ -71,6 +72,10 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{
             __html: THEME_COLOR_SCRIPT,
           }}
+        />
+        <Script
+          src="/nutrient-viewer/nutrient-viewer.js"
+          strategy="beforeInteractive"
         />
       </head>
       <body className="antialiased">

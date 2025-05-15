@@ -3,20 +3,19 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // Ensure PSPDFKit is included in the client build
-      config.resolve.alias = {
-        ...(config.resolve.alias || {}),
-        pspdfkit: require.resolve("pspdfkit"),
-      };
+      config.externals = config.externals || [];
+      config.externals.push({
+        "@nutrient-sdk/viewer": "@nutrient-sdk/viewer",
+      });
     }
 
     return config;
   },
   experimental: {
-    ppr: true, // Enable Parallel Router Prefetching (experimental)
+    ppr: true,
     turbo: {
       resolveAlias: {
-        pspdfkit: "pspdfkit",
+        "@nutrient-sdk/viewer": "@nutrient-sdk/viewer",
       },
     },
   },
