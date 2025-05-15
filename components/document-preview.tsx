@@ -2,16 +2,16 @@
 
 import {
   memo,
-  MouseEvent,
+  type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
 } from 'react';
-import { ArtifactKind, UIArtifact } from './artifact';
+import type { ArtifactKind, UIArtifact } from './artifact';
 import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
-import { Document } from '@/lib/db/schema';
+import type { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
 import { Editor } from './text-editor';
@@ -21,6 +21,7 @@ import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
+import { PDFAnnotation } from './pdf-annotation';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -88,16 +89,32 @@ export function DocumentPreview({
     ? previewDocument
     : artifact.status === 'streaming'
       ? {
-          title: artifact.title,
-          kind: artifact.kind,
-          content: artifact.content,
-          id: artifact.documentId,
-          createdAt: new Date(),
-          userId: 'noop',
-        }
+        title: artifact.title,
+        kind: artifact.kind,
+        content: artifact.content,
+        id: artifact.documentId,
+        createdAt: new Date(),
+        userId: 'noop',
+      }
       : null;
 
   if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
+
+  if (document.kind === 'text') {
+    return (
+      <PDFAnnotation
+        url={document.content ?? "No content"}
+        onAnnotationChange={(annotations) => {
+          if (annotations.length > 0) {
+            setArtifact((artifact) => ({
+              ...artifact,
+              parts: [{ type: 'pdf-annotations', annotations }],
+            }));
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <div className="relative w-full cursor-pointer">
@@ -160,18 +177,18 @@ const PureHitboxLayer = ({
         artifact.status === 'streaming'
           ? { ...artifact, isVisible: true }
           : {
-              ...artifact,
-              title: result.title,
-              documentId: result.id,
-              kind: result.kind,
-              isVisible: true,
-              boundingBox: {
-                left: boundingBox.x,
-                top: boundingBox.y,
-                width: boundingBox.width,
-                height: boundingBox.height,
-              },
+            ...artifact,
+            title: result.title,
+            documentId: result.id,
+            kind: result.kind,
+            isVisible: true,
+            boundingBox: {
+              left: boundingBox.x,
+              top: boundingBox.y,
+              width: boundingBox.width,
+              height: boundingBox.height,
             },
+          },
       );
     },
     [setArtifact, result],
@@ -250,18 +267,18 @@ const DocumentContent = ({ document }: { document: Document }) => {
     isCurrentVersion: true,
     currentVersionIndex: 0,
     status: artifact.status,
-    saveContent: () => {},
+    saveContent: () => { },
     suggestions: [],
   };
 
   return (
     <div className={containerClassName}>
       {document.kind === 'text' ? (
-        <Editor {...commonProps} onSaveContent={() => {}} />
+        <Editor {...commonProps} onSaveContent={() => { }} />
       ) : document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full">
           <div className="absolute inset-0">
-            <CodeEditor {...commonProps} onSaveContent={() => {}} />
+            <CodeEditor {...commonProps} onSaveContent={() => { }} />
           </div>
         </div>
       ) : document.kind === 'sheet' ? (

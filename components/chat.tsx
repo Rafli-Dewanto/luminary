@@ -18,6 +18,12 @@ import { toast } from './toast';
 import type { Session } from 'next-auth';
 import { useSearchParams } from 'next/navigation';
 
+import dynamic from 'next/dynamic';
+const PDFViewer = dynamic(() => import('../components/pdf-viewer'), { ssr: false })
+
+import { Show } from './shared/show';
+import ClientOnly from './shared/client-only';
+
 export function Chat({
   id,
   initialMessages,
@@ -25,6 +31,7 @@ export function Chat({
   selectedVisibilityType,
   isReadonly,
   session,
+  attachmentUrl,
 }: {
   id: string;
   initialMessages: Array<UIMessage>;
@@ -32,6 +39,7 @@ export function Chat({
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   session: Session;
+  attachmentUrl?: string;
 }) {
   const { mutate } = useSWRConfig();
 
@@ -94,44 +102,56 @@ export function Chat({
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh bg-background">
-        <ChatHeader
-          chatId={id}
-          selectedModelId={selectedChatModel}
-          selectedVisibilityType={selectedVisibilityType}
-          isReadonly={isReadonly}
-          session={session}
-        />
+      <div
+        className={`flex flex-col min-w-0 h-dvh bg-background ${attachmentUrl ? 'md:flex-row' : ''
+          }`}
+      >
+        <div className={`flex flex-col flex-1 ${attachmentUrl ? 'md:w-1/2' : 'w-full'}`}>
+          <ChatHeader
+            chatId={id}
+            selectedModelId={selectedChatModel}
+            selectedVisibilityType={selectedVisibilityType}
+            isReadonly={isReadonly}
+            session={session}
+          />
 
-        <Messages
-          chatId={id}
-          status={status}
-          votes={votes}
-          messages={messages}
-          setMessages={setMessages}
-          reload={reload}
-          isReadonly={isReadonly}
-          isArtifactVisible={isArtifactVisible}
-        />
+          <Messages
+            chatId={id}
+            status={status}
+            votes={votes}
+            messages={messages}
+            setMessages={setMessages}
+            reload={reload}
+            isReadonly={isReadonly}
+            isArtifactVisible={isArtifactVisible}
+          />
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-          {!isReadonly && (
-            <MultimodalInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              handleSubmit={handleSubmit}
-              status={status}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
-              append={append}
-            />
-          )}
-        </form>
+          <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
+            {!isReadonly && (
+              <MultimodalInput
+                chatId={id}
+                input={input}
+                setInput={setInput}
+                handleSubmit={handleSubmit}
+                status={status}
+                stop={stop}
+                attachments={attachments}
+                setAttachments={setAttachments}
+                messages={messages}
+                setMessages={setMessages}
+                append={append}
+              />
+            )}
+          </form>
+        </div>
+
+        <Show when={Boolean(attachmentUrl) && attachmentUrl !== ''}>
+          <div className="flex-1 md:w-1/2 overflow-y-auto bg-gray-100">
+            <PDFViewer url={attachmentUrl as string} />
+          </div>
+        </Show>
       </div>
+
 
       <Artifact
         chatId={id}

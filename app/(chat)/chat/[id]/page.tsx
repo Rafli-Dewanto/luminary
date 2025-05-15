@@ -3,16 +3,22 @@ import { notFound, redirect } from 'next/navigation';
 
 import { auth } from '@/app/(auth)/auth';
 import { Chat } from '@/components/chat';
-import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
+import { getChatById, getMessagesByChatId } from '@/lib/db/queries';
 import type { DBMessage } from '@/lib/db/schema';
 import type { Attachment, UIMessage } from 'ai';
+import ClientOnly from '@/components/shared/client-only';
 
 export default async function Page(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const { id } = params;
   const chat = await getChatById({ id });
+
+  // find existing document from messages_v2
+  const messages = await getMessagesByChatId({ id });
+  const attachments = Array.isArray(messages[0].attachments) ? messages[0].attachments : [];
+  const attachmentUrl = attachments.length > 0 ? attachments[0].url : '';
 
   if (!chat) {
     notFound();
@@ -57,14 +63,17 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   if (!chatModelFromCookie) {
     return (
       <>
-        <Chat
-          id={chat.id}
-          initialMessages={convertToUIMessages(messagesFromDb)}
-          selectedChatModel={DEFAULT_CHAT_MODEL}
-          selectedVisibilityType={chat.visibility}
-          isReadonly={session?.user?.id !== chat.userId}
-          session={session}
-        />
+        <ClientOnly>
+          <Chat
+            id={chat.id}
+            attachmentUrl={attachmentUrl}
+            initialMessages={convertToUIMessages(messagesFromDb)}
+            selectedChatModel={DEFAULT_CHAT_MODEL}
+            selectedVisibilityType={chat.visibility}
+            isReadonly={session?.user?.id !== chat.userId}
+            session={session}
+          />
+        </ClientOnly>
         <DataStreamHandler id={id} />
       </>
     );
@@ -72,14 +81,17 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   return (
     <>
-      <Chat
-        id={chat.id}
-        initialMessages={convertToUIMessages(messagesFromDb)}
-        selectedChatModel={chatModelFromCookie.value}
-        selectedVisibilityType={chat.visibility}
-        isReadonly={session?.user?.id !== chat.userId}
-        session={session}
-      />
+      <ClientOnly>
+        <Chat
+          id={chat.id}
+          attachmentUrl={attachmentUrl}
+          initialMessages={convertToUIMessages(messagesFromDb)}
+          selectedChatModel={chatModelFromCookie.value}
+          selectedVisibilityType={chat.visibility}
+          isReadonly={session?.user?.id !== chat.userId}
+          session={session}
+        />
+      </ClientOnly>
       <DataStreamHandler id={id} />
     </>
   );
