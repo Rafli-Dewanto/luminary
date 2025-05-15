@@ -35,11 +35,35 @@ export async function POST(request: Request) {
 }
 
 function generateCitation(data: any, style: string): string {
+  const author = `${data.author[0].family}, ${data.author[0].given}`;
+  const year = data.issued["date-parts"][0][0];
+  const title = data.title;
+  const containerTitle = data["container-title"];
+  const doi = data.DOI ? `https://doi.org/${data.DOI}` : "";
+  const url = data.URL || doi;
+
   switch (style) {
     case "APA":
-      return `${data.author[0].family}, ${data.author[0].given}. (${data.issued["date-parts"][0][0]}). ${data.title}. ${data["container-title"]}. https://doi.org/${data.DOI}`;
+      return `${author}. (${year}). ${title}. ${containerTitle}. ${doi}`;
+
     case "Harvard":
-      return `${data.author[0].family}, ${data.author[0].given}, ${data.issued["date-parts"][0][0]}, ${data.title}, ${data["container-title"]}, DOI: https://doi.org/${data.DOI}`;
+      return `${author}, ${year}, ${title}, ${containerTitle}, DOI: ${doi}`;
+
+    case "MLA":
+      return `${data.author[0].given} ${data.author[0].family}. "${title}." ${containerTitle}, ${year}, ${url}.`;
+
+    case "Chicago":
+      return `${data.author[0].given} ${data.author[0].family}. "${title}." ${containerTitle} (${year}): ${url}.`;
+
+    case "IEEE":
+      return `${author}, "${title}," ${containerTitle}, ${year}. [Online]. Available: ${url}`;
+
+    case "Vancouver":
+      return `${data.author[0].family} ${data.author[0].given}. ${title}. ${containerTitle}. ${year}. Available from: ${url}`;
+
+    case "Turabian":
+      return `${data.author[0].given} ${data.author[0].family}, "${title}." ${containerTitle}, ${year}. ${url}`;
+
     default:
       return "Citation style not supported yet.";
   }
