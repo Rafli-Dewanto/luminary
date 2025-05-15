@@ -8,12 +8,12 @@ import { SessionProvider } from 'next-auth/react';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chat.vercel.ai'),
+  metadataBase: new URL('https://chat-journal.vercel.app'),
   title: {
-    default: 'Chat Journal',
-    template: 'Chat Journal | %s',
+    default: 'Luminary',
+    template: 'Luminary | %s',
   },
-  description: 'Chat with your journal',
+  description: 'Illuminate Your Research',
 };
 
 export const viewport = {
