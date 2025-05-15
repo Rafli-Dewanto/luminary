@@ -161,9 +161,6 @@ importers:
       pdf-lib:
         specifier: ^1.17.1
         version: 1.17.1
-      pdfjs-dist:
-        specifier: ^5.2.133
-        version: 5.2.133
       postgres:
         specifier: ^3.4.4
         version: 3.4.5
