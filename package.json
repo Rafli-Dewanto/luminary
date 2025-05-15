@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbo",
-    "build": "pnpm run copy-assets && pnpm run copy-pspdfkit && next build",
+    "build": "tsx lib/db/migrate && pnpm run copy-assets && pnpm run copy-pspdfkit && next build",
     "copy-assets": "cp ./node_modules/pdfjs-dist/build/pdf.worker.min.mjs ./public/",
     "copy-pspdfkit": "cp -R ./node_modules/pspdfkit/dist/pspdfkit-lib public/pspdfkit-lib",
     "start": "next start",
