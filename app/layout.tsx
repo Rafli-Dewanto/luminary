@@ -8,7 +8,7 @@ import { SessionProvider } from 'next-auth/react';
 import Script from 'next/script';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://chat-journal.vercel.app'),
+  metadataBase: new URL('https://luminary.dewanto.dev'),
   title: {
     default: 'Luminary',
     template: 'Luminary | %s',
@@ -32,8 +32,8 @@ const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
 });
 
-const LIGHT_THEME_COLOR = 'hsl(0 0% 100%)';
-const DARK_THEME_COLOR = 'hsl(240deg 10% 3.92%)';
+const LIGHT_THEME_COLOR = 'hsl(220.00 23.08% 94.90%)';
+const DARK_THEME_COLOR = 'hsl(240 21.31% 11.96%)';
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var html = document.documentElement;
