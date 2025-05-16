@@ -1,104 +1,99 @@
 'use client';
 
 import { redis } from '@/lib/redis';
-import { Annotation, Instance } from '@nutrient-sdk/viewer';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { toast } from './toast';
 
 interface PDFViewerProps {
-    url: string;
-    chatId: string;
-    onAnnotationChange?: (annotations: Annotation[]) => void;
+  url: string;
+  chatId: string;
+  onAnnotationChange?: (annotations: any[]) => void;
 }
 
-export default function PDFViewer({ url, chatId, onAnnotationChange }: PDFViewerProps) {
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const [annotations, setAnnotations] = useState<Annotation[]>([]);
-    const [isClient, setIsClient] = useState(false);
+export default function PDFViewer({
+  url,
+  chatId,
+  onAnnotationChange
+}: PDFViewerProps) {
+  const viewerRef = useRef<HTMLDivElement | null>(null);
+  const instanceRef = useRef<any>(null);
 
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !viewerRef.current) return;
 
-    useEffect(() => {
-        if (typeof window === 'undefined' || !isClient || !containerRef.current) return;
+    let isMounted = true;
 
-        const loadViewer = async () => {
-            try {
-                const { NutrientViewer } = window;
-                const container = containerRef.current as HTMLElement;
+    const loadViewer = async () => {
+      try {
+        // Clean up previous instance if it exists
+        if (instanceRef.current) {
+          instanceRef.current.dispose();
+          instanceRef.current = null;
+        }
+        // ignore types error
+        const WebViewer = (await import('@pdftron/pdfjs-express')).default;
 
-                // Load saved annotations from Redis
-                if (NutrientViewer && containerRef) {
-                    let instance: Instance | null = null;
-                    const redisKey = `${chatId}:${url}`;
-                    const savedAnnotations = await redis.get(redisKey);
-                    if (!savedAnnotations) {
-                        instance = await NutrientViewer.load({
-                            container,
-                            document: url,
-                            baseUrl: `${window.location.origin}/nutrient-viewer/`,
-                        });
-                    } else {
-                        instance = await NutrientViewer.load({
-                            container,
-                            document: url,
-                            baseUrl: `${window.location.origin}/nutrient-viewer/`,
-                            // @ts-ignore - pspdfkit doesn't export the type for this
-                            instantJSON: savedAnnotations,
-                        });
-                    }
+        // Only proceed if the component is still mounted
+        if (!isMounted || !viewerRef.current) return;
 
-                    // Fetch existing annotations
-                    const existingAnnotations = await instance.getAnnotations(0);
-                    setAnnotations(existingAnnotations.toArray());
+        // Clear any content from the viewer div
+        viewerRef.current.innerHTML = '';
 
-                    // Listen for annotation changes
-                    instance.addEventListener('annotations.create', (createdAnnotations) => {
-                        const newAnnotations = createdAnnotations.toArray();
-                        setAnnotations((prev) => [...prev, ...newAnnotations]);
+        const instance = await WebViewer(
+          {
+            path: "/pdfjsexpress",
+            initialDoc: url,
+          },
+          viewerRef.current
+        );
 
-                        if (onAnnotationChange) {
-                            onAnnotationChange([...annotations, ...newAnnotations]);
-                        }
-                    });
+        // Store the instance for cleanup
+        instanceRef.current = instance;
 
-                    instance.addEventListener('annotations.delete', (deletedAnnotations) => {
-                        const deletedIds = deletedAnnotations.toArray().map((a) => a.id);
-                        const updatedAnnotations = annotations.filter((a) => !deletedIds.includes(a.id));
-                        setAnnotations(updatedAnnotations);
+        const { Core } = instance;
+        const { annotationManager, documentViewer } = Core;
 
-                        if (onAnnotationChange) {
-                            onAnnotationChange(updatedAnnotations);
-                        }
-                    });
+        documentViewer.addEventListener("documentLoaded", async () => {
+          if (!isMounted) return;
 
-                    // Save annotations to Redis when changes occur
-                    const saveAnnotations = async () => {
-                        instance.save();
-                        const instantJSON = await instance.exportInstantJSON();
-                        await redis.set(redisKey, JSON.stringify(instantJSON));
-                        console.log("Annotations saved to Redis:", redisKey);
-                    };
+          const redisKey = `${chatId}:${url}`;
+          const xfdfString = await redis.get(redisKey);
 
-                    instance.addEventListener('annotations.create', saveAnnotations);
-                    instance.addEventListener('annotations.delete', saveAnnotations);
-                    instance.addEventListener('annotations.update', saveAnnotations);
+          if (xfdfString) {
+            await annotationManager.importAnnotations(xfdfString);
+          }
+        });
 
-                    // Clean up on unload
-                    return () => {
-                        NutrientViewer.unload(container);
-                        console.log("PSPDFKit unloaded");
-                    };
-                }
-            } catch (error) {
-                console.error("Error loading PSPDFKit:", error);
-            }
-        };
+        annotationManager.addEventListener('annotationChanged', async () => {
+          if (!isMounted) return;
 
-        loadViewer();
-    }, [isClient, url, onAnnotationChange]);
+          const xfdfString = await annotationManager.exportAnnotations();
+          await redis.set(`${chatId}:${url}`, xfdfString);
 
-    if (!isClient) return null;
+          if (onAnnotationChange) {
+            const annotations = await annotationManager.getAnnotationsList();
+            onAnnotationChange(annotations);
+          }
+        });
+      } catch (error) {
+        toast({
+          type: "error",
+          description: "Error loading PDF viewer",
+        })
+      }
+    };
 
-    return <div ref={containerRef} style={{ height: '100vh', width: '100%' }} />;
+    loadViewer();
+
+    // Cleanup function
+    return () => {
+      isMounted = false;
+      if (instanceRef.current) {
+        instanceRef.current.dispose();
+        instanceRef.current = null;
+      }
+    };
+  }, [url, chatId, onAnnotationChange]);
+
+  return <div ref={viewerRef} style={{ height: '100vh', width: '100%' }} />;
 }
