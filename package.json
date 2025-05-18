@@ -3,8 +3,8 @@
   "version": "3.0.13",
   "private": true,
   "scripts": {
-    "dev": "pnpm run clear-cache && pnpm run copy-assets && next dev --turbo",
-    "build": "pnpm run cp-pdfjs && pnpm run copy-assets && next build",
+    "dev": "pnpm run clear-cache && pnpm run cp-pdfjs && next dev --turbo",
+    "build": "pnpm run cp-pdfjs && next build",
     "copy-assets": "mkdir -p ./public/nutrient-viewer && cp -R ./node_modules/@nutrient-sdk/viewer/dist/* ./public/nutrient-viewer/",
     "cp-pdfjs": "mkdir -p ./public/pdfjsexpress && cp -a ./node_modules/@pdftron/pdfjs-express/public/. ./public/pdfjsexpress",
     "clear-cache": "rm -rf .next",
@@ -127,10 +127,7 @@
   },
   "packageManager": "pnpm@10.11.0",
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
-      "pnpm run lint:fix",
-      "git add"
-    ]
+    "*.{ts,tsx,js,jsx}": ["pnpm run lint:fix", "git add"]
   },
   "pre-push": "pnpm run build"
 }

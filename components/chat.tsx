@@ -7,8 +7,8 @@ import { fetcher, generateUUID } from '@/lib/utils';
 import { useChat } from '@ai-sdk/react';
 import type { Attachment, UIMessage } from 'ai';
 import type { Session } from 'next-auth';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { unstable_serialize } from 'swr/infinite';
 import { Artifact } from './artifact';
@@ -19,7 +19,9 @@ import { toast } from './toast';
 import type { VisibilityType } from './visibility-selector';
 
 import dynamic from 'next/dynamic';
-const PDFViewer = dynamic(() => import('../components/pdf-viewer'), { ssr: false })
+const PDFViewer = dynamic(() => import('../components/pdf-viewer'), {
+  ssr: false,
+});
 
 import { Show } from './shared/show';
 
@@ -41,6 +43,8 @@ export function Chat({
   attachmentUrl?: string;
 }) {
   const { mutate } = useSWRConfig();
+  const isPDFSubmitted = useRef(false);
+  const router = useRouter();
 
   const {
     messages,
@@ -65,6 +69,12 @@ export function Chat({
     }),
     onFinish: () => {
       mutate(unstable_serialize(getChatHistoryPaginationKey));
+    },
+    onResponse: () => {
+      if (isPDFSubmitted.current) return;
+      isPDFSubmitted.current = true;
+      router.refresh();
+      return;
     },
     onError: (error) => {
       toast({
@@ -102,10 +112,13 @@ export function Chat({
   return (
     <>
       <div
-        className={`flex flex-col min-w-0 h-dvh bg-background ${attachmentUrl ? 'md:flex-row' : ''
-          }`}
+        className={`flex flex-col min-w-0 h-dvh bg-background ${
+          attachmentUrl ? 'md:flex-row' : ''
+        }`}
       >
-        <div className={`flex flex-col flex-1 ${attachmentUrl ? 'md:w-1/2' : 'w-full'}`}>
+        <div
+          className={`flex flex-col flex-1 ${attachmentUrl ? 'md:w-1/2' : 'w-full'}`}
+        >
           <ChatHeader
             chatId={id}
             selectedModelId={selectedChatModel}
@@ -150,7 +163,6 @@ export function Chat({
           </div>
         </Show>
       </div>
-
 
       <Artifact
         chatId={id}

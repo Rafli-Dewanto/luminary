@@ -17,7 +17,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
 
   // find existing document from messages_v2
   const messages = await getMessagesByChatId({ id });
-  const attachments = messages[0]?.attachments as Attachment[] ?? [];
+  const attachments = (messages[0]?.attachments as Attachment[]) ?? [];
   const attachmentUrl = attachments[0]?.url ?? '';
 
   if (!chat) {
