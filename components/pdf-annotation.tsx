@@ -15,7 +15,7 @@ export function PDFAnnotation({
   url,
   className,
   onAnnotationChange,
-  chatId
+  chatId,
 }: PDFAnnotationProps) {
   const [annotations, setAnnotations] = useState<any[]>([]);
 
@@ -34,7 +34,11 @@ export function PDFAnnotation({
       )}
     >
       <div className="relative flex-1 overflow-hidden">
-        <PDFViewer chatId={chatId} url={url} onAnnotationChange={handleAnnotationChange} />
+        <PDFViewer
+          chatId={chatId}
+          url={url}
+          onAnnotationChange={handleAnnotationChange}
+        />
       </div>
     </div>
   );

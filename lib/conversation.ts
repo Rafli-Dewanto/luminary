@@ -5,7 +5,7 @@ const MEMORY_LIMIT = 20;
 
 export async function saveToConversationHistory(
   userId: string,
-  messages: { role: string; content: string }[]
+  messages: { role: string; content: string }[],
 ) {
   const key = `conversation:${userId}`;
 

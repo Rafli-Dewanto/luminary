@@ -1,11 +1,11 @@
-import CitationPage from "@/components/citation"
+import CitationPage from '@/components/citation';
 
 const CitationGenerator = () => {
   return (
     <div>
       <CitationPage />
     </div>
-  )
-}
+  );
+};
 
-export default CitationGenerator
+export default CitationGenerator;

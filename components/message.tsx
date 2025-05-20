@@ -164,7 +164,11 @@ const PurePreviewMessage = ({
                       {toolName === 'getWeather' ? (
                         <Weather />
                       ) : toolName === 'createDocument' ? (
-                        <DocumentPreview chatId='' isReadonly={isReadonly} args={args} />
+                        <DocumentPreview
+                          chatId=""
+                          isReadonly={isReadonly}
+                          args={args}
+                        />
                       ) : toolName === 'updateDocument' ? (
                         <DocumentToolCall
                           type="update"
@@ -191,7 +195,7 @@ const PurePreviewMessage = ({
                         <Weather weatherAtLocation={result} />
                       ) : toolName === 'createDocument' ? (
                         <DocumentPreview
-                          chatId=''
+                          chatId=""
                           isReadonly={isReadonly}
                           result={result}
                         />

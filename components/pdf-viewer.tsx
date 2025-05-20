@@ -13,7 +13,7 @@ interface PDFViewerProps {
 export default function PDFViewer({
   url,
   chatId,
-  onAnnotationChange
+  onAnnotationChange,
 }: PDFViewerProps) {
   const viewerRef = useRef<HTMLDivElement | null>(null);
   const instanceRef = useRef<any>(null);
@@ -41,10 +41,10 @@ export default function PDFViewer({
 
         const instance = await WebViewer(
           {
-            path: "/pdfjsexpress",
+            path: '/pdfjsexpress',
             initialDoc: url,
           },
-          viewerRef.current
+          viewerRef.current,
         );
 
         // Store the instance for cleanup
@@ -53,7 +53,7 @@ export default function PDFViewer({
         const { Core } = instance;
         const { annotationManager, documentViewer } = Core;
 
-        documentViewer.addEventListener("documentLoaded", async () => {
+        documentViewer.addEventListener('documentLoaded', async () => {
           if (!isMounted) return;
 
           const redisKey = `${chatId}:${url}`;
@@ -77,9 +77,9 @@ export default function PDFViewer({
         });
       } catch (error) {
         toast({
-          type: "error",
-          description: "Error loading PDF viewer",
-        })
+          type: 'error',
+          description: 'Error loading PDF viewer',
+        });
       }
     };
 
