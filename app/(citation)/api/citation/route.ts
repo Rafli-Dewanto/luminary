@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     // Generate citation based on the selected style
     const citation = generateCitation(citationData, style);
 
-    return NextResponse.json({ citation });
+    return NextResponse.json({ data: citation });
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to generate citation' },

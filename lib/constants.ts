@@ -11,3 +11,6 @@ export const isTestEnvironment = Boolean(
 export const guestRegex = /^guest-\d+$/;
 
 export const DUMMY_PASSWORD = generateDummyPassword();
+
+
+export const citationStyles = ["APA", "Harvard", "MLA", "Chicago", "IEEE", "Vancouver", "Turabian"]

@@ -24,6 +24,8 @@ const PDFViewer = dynamic(() => import('../components/pdf-viewer'), {
 });
 
 import { Show } from './shared/show';
+import { useBoolean } from '@/hooks/use-boolean';
+import { useMediaQuery } from 'usehooks-ts';
 
 export function Chat({
   id,
@@ -107,14 +109,15 @@ export function Chat({
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+  const { value: isPdfVisible, toggle: togglePdfVisible } = useBoolean(true);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  const isMobile = useMediaQuery('(max-width: 1024px)');
 
   return (
     <>
       <div
-        className={`flex flex-col min-w-0 h-dvh bg-background ${
-          attachmentUrl ? 'md:flex-row' : ''
-        }`}
+        className={`flex flex-col min-w-0 h-dvh bg-background ${attachmentUrl ? 'md:flex-row' : ''
+          }`}
       >
         <div
           className={`flex flex-col flex-1 ${attachmentUrl ? 'md:w-1/2' : 'w-full'}`}
@@ -125,7 +128,15 @@ export function Chat({
             selectedVisibilityType={selectedVisibilityType}
             isReadonly={isReadonly}
             session={session}
+            isPdfVisible={isPdfVisible}
+            onPdfToggle={togglePdfVisible}
+            showPdfToggle={Boolean(attachmentUrl)}
           />
+
+          {/* mobile pdf viewer */}
+          <Show when={Boolean(attachmentUrl) && attachmentUrl !== '' && isPdfVisible && isMobile}>
+            <PDFViewer chatId={id} url={attachmentUrl as string} />
+          </Show>
 
           <Messages
             chatId={id}
@@ -139,7 +150,7 @@ export function Chat({
           />
 
           <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-            {!isReadonly && (
+            <Show when={!isReadonly}>
               <MultimodalInput
                 chatId={id}
                 input={input}
@@ -153,11 +164,11 @@ export function Chat({
                 setMessages={setMessages}
                 append={append}
               />
-            )}
+            </Show>
           </form>
         </div>
 
-        <Show when={Boolean(attachmentUrl) && attachmentUrl !== ''}>
+        <Show when={Boolean(attachmentUrl) && attachmentUrl !== '' && isPdfVisible && !isMobile}>
           <div className="flex-1 md:w-1/2 overflow-y-auto bg-gray-100">
             <PDFViewer chatId={id} url={attachmentUrl as string} />
           </div>
