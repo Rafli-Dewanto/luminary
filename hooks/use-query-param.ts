@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo } from "react";
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useMemo } from 'react';
 
 export const useQueryParams = <
-  T extends Record<string, string | number | boolean | unknown>
+  T extends Record<string, string | number | boolean | unknown>,
 >() => {
   const searchParams = useSearchParams();
   const router = useRouter();

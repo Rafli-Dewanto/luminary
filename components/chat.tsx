@@ -116,8 +116,9 @@ export function Chat({
   return (
     <>
       <div
-        className={`flex flex-col min-w-0 h-dvh bg-background ${attachmentUrl ? 'md:flex-row' : ''
-          }`}
+        className={`flex flex-col min-w-0 h-dvh bg-background ${
+          attachmentUrl ? 'md:flex-row' : ''
+        }`}
       >
         <div
           className={`flex flex-col flex-1 ${attachmentUrl ? 'md:w-1/2' : 'w-full'}`}
@@ -134,7 +135,14 @@ export function Chat({
           />
 
           {/* mobile pdf viewer */}
-          <Show when={Boolean(attachmentUrl) && attachmentUrl !== '' && isPdfVisible && isMobile}>
+          <Show
+            when={
+              Boolean(attachmentUrl) &&
+              attachmentUrl !== '' &&
+              isPdfVisible &&
+              isMobile
+            }
+          >
             <PDFViewer chatId={id} url={attachmentUrl as string} />
           </Show>
 
@@ -168,7 +176,14 @@ export function Chat({
           </form>
         </div>
 
-        <Show when={Boolean(attachmentUrl) && attachmentUrl !== '' && isPdfVisible && !isMobile}>
+        <Show
+          when={
+            Boolean(attachmentUrl) &&
+            attachmentUrl !== '' &&
+            isPdfVisible &&
+            !isMobile
+          }
+        >
           <div className="flex-1 md:w-1/2 overflow-y-auto bg-gray-100">
             <PDFViewer chatId={id} url={attachmentUrl as string} />
           </div>

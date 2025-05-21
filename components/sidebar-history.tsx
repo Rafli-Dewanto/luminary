@@ -86,7 +86,8 @@ export function getChatHistoryPaginationKey(
     return null;
   }
 
-  if (pageIndex === 0) return `/api/history?limit=${PAGE_SIZE}&chat_name=${chatName}`;
+  if (pageIndex === 0)
+    return `/api/history?limit=${PAGE_SIZE}&chat_name=${chatName}`;
 
   const firstChatFromPage = previousPageData.chats.at(-1);
 
@@ -117,7 +118,12 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     isLoading,
     mutate,
   } = useSWRInfinite<ChatHistory>(
-    (pageIndex, previousPageData) => getChatHistoryPaginationKey(pageIndex, previousPageData, debouncedSearchQuery),
+    (pageIndex, previousPageData) =>
+      getChatHistoryPaginationKey(
+        pageIndex,
+        previousPageData,
+        debouncedSearchQuery,
+      ),
     fetcher,
     {
       fallbackData: [],

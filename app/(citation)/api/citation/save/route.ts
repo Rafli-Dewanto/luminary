@@ -1,21 +1,21 @@
-import { auth } from "@/app/(auth)/auth";
-import { getCitationsByUserId, insertCitation } from "@/lib/db/queries";
-import { getErrorMessage, logger } from "@/lib/utils";
-import type { Pagination } from "@/types/pagination";
+import { auth } from '@/app/(auth)/auth';
+import { getCitationsByUserId, insertCitation } from '@/lib/db/queries';
+import { getErrorMessage, logger } from '@/lib/utils';
+import type { Pagination } from '@/types/pagination';
 
 export async function POST(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { doi, style, content } = await request.json();
 
     if (!doi || !style || !content) {
       return Response.json(
-        { error: "DOI, citation style, and content are required" },
-        { status: 400 }
+        { error: 'DOI, citation style, and content are required' },
+        { status: 400 },
       );
     }
 
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     });
 
     return Response.json({
-      message: "Citation saved successfully",
+      message: 'Citation saved successfully',
       status: 201,
     });
   } catch (error) {
@@ -40,13 +40,13 @@ export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      logger.error("Unauthorized");
-      return Response.json({ error: "Unauthorized" }, { status: 401 });
+      logger.error('Unauthorized');
+      return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const page = Number.parseInt(searchParams.get("page") || "1");
-    const limit = Number.parseInt(searchParams.get("limit") || "10");
+    const page = Number.parseInt(searchParams.get('page') || '1');
+    const limit = Number.parseInt(searchParams.get('limit') || '10');
 
     const { citations, hasMore } = await getCitationsByUserId({
       userId: session.user.id,
@@ -72,7 +72,7 @@ export async function GET(request: Request) {
       {
         error: errMessage,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

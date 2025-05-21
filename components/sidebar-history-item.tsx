@@ -48,7 +48,7 @@ const PureChatItem = ({
   });
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(chat.title);
-  const [editedChatId, setEditedChatId] = useState("");
+  const [editedChatId, setEditedChatId] = useState('');
 
   const handleUpdateChatName = async (chatId: string) => {
     try {
@@ -73,14 +73,14 @@ const PureChatItem = ({
       toast.success('Chat name updated');
       return;
     } catch (error) {
-      toast.error(getErrorMessage(error))
+      toast.error(getErrorMessage(error));
     }
   };
 
   const cancelEditing = () => {
     setIsEditing(false);
     setName(chat.title);
-    setEditedChatId("");
+    setEditedChatId('');
   };
 
   return (
@@ -88,14 +88,15 @@ const PureChatItem = ({
       <SidebarMenuButton asChild isActive={isActive}>
         <div className="w-full">
           <Show when={!isEditing || editedChatId !== chat.id}>
-            <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
+            <Link
+              href={`/chat/${chat.id}`}
+              onClick={() => setOpenMobile(false)}
+            >
               <span className="truncate">
                 <Show when={chat.title.length > 26}>
                   {chat.title.substring(0, 26)}.....
                 </Show>
-                <Show when={chat.title.length <= 26}>
-                  {chat.title}
-                </Show>
+                <Show when={chat.title.length <= 26}>{chat.title}</Show>
               </span>
             </Link>
           </Show>
