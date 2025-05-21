@@ -3,17 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
-
-import { ModelSelector } from '@/components/model-selector';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
 import type { Session } from 'next-auth';
 import { Show } from './shared/show';
+import { EyeIcon, EyeIcon as EyeOffIcon, PlusIcon } from './icons';
 
 function PureChatHeader({
   chatId,
@@ -21,12 +19,18 @@ function PureChatHeader({
   selectedVisibilityType,
   isReadonly,
   session,
+  isPdfVisible,
+  onPdfToggle,
+  showPdfToggle,
 }: {
   chatId: string;
   selectedModelId: string;
   selectedVisibilityType: VisibilityType;
   isReadonly: boolean;
   session: Session;
+  isPdfVisible?: boolean;
+  onPdfToggle?: () => void;
+  showPdfToggle?: boolean;
 }) {
   const router = useRouter();
   const { open } = useSidebar();
@@ -56,13 +60,13 @@ function PureChatHeader({
         </Tooltip>
       </Show>
 
-      <Show when={!isReadonly}>
+      {/* <Show when={!isReadonly}>
         <ModelSelector
           session={session}
           selectedModelId={selectedModelId}
           className="order-1 md:order-2"
         />
-      </Show>
+      </Show> */}
 
       <Show when={!isReadonly}>
         <VisibilitySelector
@@ -72,9 +76,29 @@ function PureChatHeader({
         />
       </Show>
 
+      <Show when={!!showPdfToggle}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              className="order-1 md:order-4 px-2"
+              onClick={onPdfToggle}
+            >
+              {isPdfVisible ? <EyeIcon /> : <EyeOffIcon />}
+              <span className="sr-only">
+                {isPdfVisible ? 'Hide PDF' : 'Show PDF'}
+              </span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isPdfVisible ? 'Hide PDF' : 'Show PDF'}
+          </TooltipContent>
+        </Tooltip>
+      </Show>
+
       <Link
-        href="/citation/generator"
-        className="text-sm font-medium text-gray-700 hover:underline"
+        href="/citation"
+        className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:underline"
       >
         Citation Generator
       </Link>
