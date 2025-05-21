@@ -1,10 +1,16 @@
-import { Chat } from '@/lib/db/schema';
-import {
-  SidebarMenuAction,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from './ui/sidebar';
+import { useChatVisibility } from '@/hooks/use-chat-visibility';
+import type { Chat } from '@/lib/db/schema';
 import Link from 'next/link';
+import { memo, useState } from 'react';
+import { toast } from 'sonner';
+import {
+  CheckCircleFillIcon,
+  GlobeIcon,
+  LockIcon,
+  MoreHorizontalIcon,
+  ShareIcon,
+  TrashIcon,
+} from './icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,15 +22,14 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import {
-  CheckCircleFillIcon,
-  GlobeIcon,
-  LockIcon,
-  MoreHorizontalIcon,
-  ShareIcon,
-  TrashIcon,
-} from './icons';
-import { memo } from 'react';
-import { useChatVisibility } from '@/hooks/use-chat-visibility';
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from './ui/sidebar';
+import { Check, Pen, X } from 'lucide-react';
+import { Show } from './shared/show';
+import { Input } from './ui/input';
+import { getErrorMessage } from '@/lib/utils';
 
 const PureChatItem = ({
   chat,
@@ -41,13 +46,96 @@ const PureChatItem = ({
     chatId: chat.id,
     initialVisibility: chat.visibility,
   });
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(chat.title);
+  const [editedChatId, setEditedChatId] = useState("");
+
+  const handleUpdateChatName = async (chatId: string) => {
+    try {
+      const response = await fetch(`/api/chat`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          id: chatId,
+          name,
+        }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+      if (!data.success) {
+        toast.error(data.message);
+        return;
+      }
+
+      setIsEditing(false);
+      toast.success('Chat name updated');
+      return;
+    } catch (error) {
+      toast.error(getErrorMessage(error))
+    }
+  };
+
+  const cancelEditing = () => {
+    setIsEditing(false);
+    setName(chat.title);
+    setEditedChatId("");
+  };
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={isActive}>
-        <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
-          <span>{chat.title}</span>
-        </Link>
+        <div className="w-full">
+          <Show when={!isEditing || editedChatId !== chat.id}>
+            <Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
+              <span className="truncate">
+                <Show when={chat.title.length > 26}>
+                  {chat.title.substring(0, 26)}.....
+                </Show>
+                <Show when={chat.title.length <= 26}>
+                  {chat.title}
+                </Show>
+              </span>
+            </Link>
+          </Show>
+          <Show when={isEditing && editedChatId === chat.id}>
+            <div className="flex items-center gap-1 h-6">
+              <Input
+                type="text"
+                value={name}
+                autoFocus
+                className="h-6 min-h-0 px-2 py-0 text-sm"
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleUpdateChatName(chat.id);
+                  } else if (e.key === 'Escape') {
+                    cancelEditing();
+                  }
+                }}
+              />
+              <div className="flex gap-1 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleUpdateChatName(chat.id)}
+                  className="flex items-center justify-center size-6 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-green-600"
+                  aria-label="Submit"
+                >
+                  <Check size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEditing}
+                  className="flex items-center justify-center size-6 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 text-red-600"
+                  aria-label="Cancel"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            </div>
+          </Show>
+        </div>
       </SidebarMenuButton>
 
       <DropdownMenu modal={true}>
@@ -105,6 +193,17 @@ const PureChatItem = ({
           >
             <TrashIcon />
             <span>Delete</span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            className="cursor-pointer flex-row"
+            onSelect={() => {
+              setIsEditing(true);
+              setEditedChatId(chat.id);
+            }}
+          >
+            <Pen />
+            <span>Rename</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

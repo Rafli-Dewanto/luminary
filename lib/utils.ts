@@ -118,14 +118,14 @@ export const logger = {
   },
 };
 
-export function getErrorMessage(error: unknown) {
+export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     logger.error(error);
     return error.message;
   }
   if (error != null && typeof error === "object" && "message" in error) {
     logger.error(error);
-    return error.message;
+    return String(error.message);
   }
   if (typeof error === "string") {
     logger.error(error);

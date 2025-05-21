@@ -8,6 +8,7 @@ import {
   eq,
   gt,
   gte,
+  ilike,
   inArray,
   lt,
   type SQL,
@@ -118,66 +119,84 @@ export async function getChatsByUserId({
   limit,
   startingAfter,
   endingBefore,
+  chatName,
 }: {
-  id: string;
-  limit: number;
-  startingAfter: string | null;
-  endingBefore: string | null;
+  id: string
+  limit: number
+  startingAfter: string | null
+  endingBefore: string | null
+  chatName?: string | null
 }) {
   try {
-    const extendedLimit = limit + 1;
+    const extendedLimit = limit + 1
+    const trimmedChatName = chatName?.trim()
 
-    const query = (whereCondition?: SQL<any>) =>
+    const baseCondition = eq(chat.userId, id)
+
+    const buildConditions = (extraCondition?: SQL) => {
+      const conditions = [baseCondition]
+      if (extraCondition) {
+        conditions.push(extraCondition)
+      }
+      return conditions
+    }
+
+    const runQuery = (conditions: SQL[]) =>
       db
         .select()
         .from(chat)
-        .where(
-          whereCondition
-            ? and(whereCondition, eq(chat.userId, id))
-            : eq(chat.userId, id)
-        )
+        .where(and(...conditions))
         .orderBy(desc(chat.createdAt))
-        .limit(extendedLimit);
+        .limit(extendedLimit)
 
-    let filteredChats: Array<Chat> = [];
+    let filteredChats: Array<Chat> = []
 
-    if (startingAfter) {
-      const [selectedChat] = await db
-        .select()
-        .from(chat)
-        .where(eq(chat.id, startingAfter))
-        .limit(1);
+    const useChatName = trimmedChatName && trimmedChatName.length > 0
 
-      if (!selectedChat) {
-        throw new Error(`Chat with id ${startingAfter} not found`);
+    const extraCondition = async () => {
+      if (startingAfter) {
+        const [selectedChat] = await db
+          .select()
+          .from(chat)
+          .where(eq(chat.id, startingAfter))
+          .limit(1)
+        if (!selectedChat) throw new Error(`Chat with id ${startingAfter} not found`)
+        return gt(chat.createdAt, selectedChat.createdAt)
       }
 
-      filteredChats = await query(gt(chat.createdAt, selectedChat.createdAt));
-    } else if (endingBefore) {
-      const [selectedChat] = await db
-        .select()
-        .from(chat)
-        .where(eq(chat.id, endingBefore))
-        .limit(1);
-
-      if (!selectedChat) {
-        throw new Error(`Chat with id ${endingBefore} not found`);
+      if (endingBefore) {
+        const [selectedChat] = await db
+          .select()
+          .from(chat)
+          .where(eq(chat.id, endingBefore))
+          .limit(1)
+        if (!selectedChat) throw new Error(`Chat with id ${endingBefore} not found`)
+        return lt(chat.createdAt, selectedChat.createdAt)
       }
 
-      filteredChats = await query(lt(chat.createdAt, selectedChat.createdAt));
-    } else {
-      filteredChats = await query();
+      return undefined
     }
 
-    const hasMore = filteredChats.length > limit;
+    const condition = await extraCondition()
+
+    if (useChatName) {
+      const conditions = buildConditions(condition)
+      conditions.push(ilike(chat.title, `%${trimmedChatName}%`))
+      filteredChats = await runQuery(conditions)
+    } else {
+      const conditions = buildConditions(condition)
+      filteredChats = await runQuery(conditions)
+    }
+
+    const hasMore = filteredChats.length > limit
 
     return {
       chats: hasMore ? filteredChats.slice(0, limit) : filteredChats,
       hasMore,
-    };
+    }
   } catch (error) {
-    console.error("Failed to get chats by user from database");
-    throw error;
+    console.error("Failed to get chats by user from database")
+    throw error
   }
 }
 
@@ -187,6 +206,21 @@ export async function getChatById({ id }: { id: string }) {
     return selectedChat;
   } catch (error) {
     console.error("Failed to get chat by id from database");
+    throw error;
+  }
+}
+
+export async function updateChatNameById({
+  id,
+  name,
+}: {
+  id: string;
+  name: string;
+}) {
+  try {
+    return await db.update(chat).set({ title: name }).where(eq(chat.id, id));
+  } catch (error) {
+    console.error("Failed to update chat name in database");
     throw error;
   }
 }
