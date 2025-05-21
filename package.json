@@ -127,7 +127,7 @@
   },
   "packageManager": "pnpm@10.11.0",
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["pnpm run lint:fix", "git add"]
+    "*.{ts,tsx,js,jsx}": ["pnpm run format", "pnpm run lint:fix", "git add"]
   },
   "pre-push": "pnpm run build"
 }
