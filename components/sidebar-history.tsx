@@ -3,7 +3,7 @@
 import { isToday, isYesterday, subMonths, subWeeks } from 'date-fns';
 import { useParams, useRouter } from 'next/navigation';
 import type { User } from 'next-auth';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import {
@@ -27,6 +27,7 @@ import { fetcher } from '@/lib/utils';
 import { ChatItem } from './sidebar-history-item';
 import useSWRInfinite from 'swr/infinite';
 import { LoaderIcon } from './icons';
+import { Input } from './ui/input';
 
 type GroupedChats = {
   today: Chat[];
@@ -79,23 +80,35 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
 export function getChatHistoryPaginationKey(
   pageIndex: number,
   previousPageData: ChatHistory,
+  chatName?: string,
 ) {
   if (previousPageData && previousPageData.hasMore === false) {
     return null;
   }
 
-  if (pageIndex === 0) return `/api/history?limit=${PAGE_SIZE}`;
+  if (pageIndex === 0) return `/api/history?limit=${PAGE_SIZE}&chat_name=${chatName}`;
 
   const firstChatFromPage = previousPageData.chats.at(-1);
 
   if (!firstChatFromPage) return null;
 
-  return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}`;
+  return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}&chat_name=${chatName}`;
 }
 
 export function SidebarHistory({ user }: { user: User | undefined }) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  // Debounce searchQuery by 300ms
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 400); // Adjust debounce delay as needed
+
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const {
     data: paginatedChatHistories,
@@ -103,9 +116,13 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     isValidating,
     isLoading,
     mutate,
-  } = useSWRInfinite<ChatHistory>(getChatHistoryPaginationKey, fetcher, {
-    fallbackData: [],
-  });
+  } = useSWRInfinite<ChatHistory>(
+    (pageIndex, previousPageData) => getChatHistoryPaginationKey(pageIndex, previousPageData, debouncedSearchQuery),
+    fetcher,
+    {
+      fallbackData: [],
+    },
+  );
 
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -205,6 +222,15 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
     <>
       <SidebarGroup>
         <SidebarGroupContent>
+          <div className="px-2 mb-2">
+            <Input
+              type="text"
+              placeholder="Search chats..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 text-sm bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <SidebarMenu>
             {paginatedChatHistories &&
               (() => {
