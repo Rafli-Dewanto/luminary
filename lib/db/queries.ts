@@ -555,22 +555,26 @@ export async function getCitationsByUserId({
   userId,
   page = 1,
   limit = 10,
+  sortBy = 'date',
 }: {
   userId: string;
   page?: number;
   limit?: number;
+  sortBy?: 'date' | 'alpha';
 }) {
   try {
     const offset = (page - 1) * limit;
     const extendedLimit = limit + 1;
 
-    const citations = await db
-      .select()
-      .from(citation)
-      .where(eq(citation.userId, userId))
-      .orderBy(desc(citation.createdAt))
-      .limit(extendedLimit)
-      .offset(offset);
+    const query = db.select().from(citation).where(eq(citation.userId, userId));
+
+    if (sortBy === 'alpha') {
+      query.orderBy(asc(citation.content));
+    } else {
+      query.orderBy(desc(citation.createdAt));
+    }
+
+    const citations = await query.limit(extendedLimit).offset(offset);
 
     const hasMore = citations.length > limit;
 
@@ -580,6 +584,39 @@ export async function getCitationsByUserId({
     };
   } catch (error) {
     logger.error('Failed to get citations by user from database');
+    throw error;
+  }
+}
+
+export async function deleteCitation({
+  userId,
+  id,
+}: {
+  userId: string;
+  id: string;
+}) {
+  try {
+    return await db
+      .delete(citation)
+      .where(and(eq(citation.userId, userId), eq(citation.id, id)));
+  } catch (error) {
+    logger.error(
+      'Failed to delete citation from database',
+      getErrorMessage(error),
+    );
+    throw error;
+  }
+}
+
+export async function getAllCitationsByUserId(userId: string) {
+  try {
+    return await db
+      .select()
+      .from(citation)
+      .where(eq(citation.userId, userId))
+      .orderBy(asc(citation.content));
+  } catch (error) {
+    logger.error('Failed to get all citations by user from database');
     throw error;
   }
 }
