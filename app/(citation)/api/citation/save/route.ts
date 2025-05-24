@@ -47,11 +47,13 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const page = Number.parseInt(searchParams.get('page') || '1');
     const limit = Number.parseInt(searchParams.get('limit') || '10');
+    const sortBy = searchParams.get('sortBy') || 'date';
 
     const { citations, hasMore } = await getCitationsByUserId({
       userId: session.user.id,
       page,
       limit,
+      sortBy: sortBy as 'date' | 'alpha',
     });
 
     const pagination: Pagination = {

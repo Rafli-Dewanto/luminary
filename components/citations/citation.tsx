@@ -46,6 +46,7 @@ export default function CitationPage() {
   const [hasPrev, setHasPrev] = useState(false);
   const [hasNext, setHasNext] = useState(false);
   const [totalCitations, setTotalCitations] = useState(0);
+  const [sortBy, setSortBy] = useState<'date' | 'alpha'>('date');
 
   const setCurrentPage = (page: number) => {
     const newParams = new URLSearchParams(searchParams);
@@ -61,7 +62,7 @@ export default function CitationPage() {
     setIsLoadingCitations(true);
     try {
       const response = await fetch(
-        `/api/citation/save?page=${page}&limit=${ITEMS_PER_PAGE}`,
+        `/api/citation/save?page=${page}&limit=${ITEMS_PER_PAGE}&sortBy=${sortBy}`,
       );
       if (!response.ok) throw new Error('Failed to fetch citations');
       const data = await response.json();
@@ -136,6 +137,58 @@ export default function CitationPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/citation/save/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete citation');
+
+      toast({
+        type: 'success',
+        description: 'Citation deleted successfully',
+      });
+
+      fetchCitations(currentPage);
+    } catch (error) {
+      console.error('[ERROR]: Failed to delete citation:', error);
+      toast({
+        type: 'error',
+        description:
+          error instanceof Error ? error.message : 'Failed to delete citation',
+      });
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/citation/export');
+      if (!response.ok) throw new Error('Failed to export citations');
+
+      const text = await response.text();
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'citations.txt';
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        type: 'success',
+        description: 'Citations exported successfully',
+      });
+    } catch (error) {
+      console.error('[ERROR]: Failed to export citations:', error);
+      toast({
+        type: 'error',
+        description:
+          error instanceof Error ? error.message : 'Failed to export citations',
+      });
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     if (text.length < 1) {
       toast({
@@ -147,7 +200,7 @@ export default function CitationPage() {
     navigator.clipboard.writeText(text);
     toast({
       type: 'success',
-      description: 'Citation copied to clipboard',
+      description: 'Citations copied to clipboard',
     });
   };
 
@@ -258,14 +311,57 @@ export default function CitationPage() {
           {/* Citations List */}
           <Card className="w-full shadow-sm mt-8">
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-2xl font-bold">
-                  My Citations
-                </CardTitle>
-                <span className="text-sm text-muted-foreground">
-                  {totalCitations}{' '}
-                  {totalCitations === 1 ? 'citation' : 'citations'}
-                </span>
+              <div className="flex justify-between items-center gap-4">
+                <div className="flex items-center gap-4">
+                  <CardTitle className="text-2xl font-bold">
+                    My Citations
+                  </CardTitle>
+                  <span className="text-sm text-muted-foreground">
+                    {totalCitations}{' '}
+                    {totalCitations === 1 ? 'citation' : 'citations'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={sortBy}
+                    onValueChange={(value: 'date' | 'alpha') => {
+                      setSortBy(value);
+                      setCurrentPage(1);
+                      fetchCitations(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Sort by" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">Most Recent</SelectItem>
+                      <SelectItem value="alpha">Alphabetical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allCitations = citations
+                        .map((c) => c.content)
+                        .join('\n\n');
+                      copyToClipboard(allCitations);
+                    }}
+                    title="Copy all citations"
+                    className="gap-1"
+                  >
+                    <Copy className="size-4" />
+                    Copy All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleExport}
+                    title="Export citations"
+                  >
+                    Export
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -307,15 +403,42 @@ export default function CitationPage() {
                           </div>
                           <p className="mt-2 text-sm">{citation.content}</p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => copyToClipboard(citation.content)}
-                          className="size-8 rounded-full"
-                          title="Copy citation"
-                        >
-                          <Copy className="size-4" />
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => copyToClipboard(citation.content)}
+                            className="size-8 rounded-full"
+                            title="Copy citation"
+                          >
+                            <Copy className="size-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(citation.id)}
+                            className="size-8 rounded-full text-destructive hover:text-destructive"
+                            title="Delete citation"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                              <line x1="10" y1="11" x2="10" y2="17" />
+                              <line x1="14" y1="11" x2="14" y2="17" />
+                            </svg>
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))}
