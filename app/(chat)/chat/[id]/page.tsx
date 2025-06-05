@@ -15,10 +15,15 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
   const { id } = params;
   const chat = await getChatById({ id });
 
-  // find existing document from messages_v2
   const messages = await getMessagesByChatId({ id });
-  const attachments = (messages[0]?.attachments as Attachment[]) ?? [];
-  const attachmentUrl = attachments[0]?.url ?? '';
+  let attachmentUrl = '';
+  for (const message of messages) {
+    const attachments = (message.attachments as Attachment[]) ?? [];
+    if (attachments.length > 0 && attachments[0]?.url) {
+      attachmentUrl = attachments[0].url;
+      break;
+    }
+  }
 
   if (!chat) {
     notFound();

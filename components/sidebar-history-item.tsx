@@ -1,7 +1,9 @@
 import { useChatVisibility } from '@/hooks/use-chat-visibility';
 import type { Chat } from '@/lib/db/schema';
+import { getErrorMessage } from '@/lib/utils';
+import { Check, Pen, X } from 'lucide-react';
 import Link from 'next/link';
-import { memo, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
   CheckCircleFillIcon,
@@ -11,6 +13,7 @@ import {
   ShareIcon,
   TrashIcon,
 } from './icons';
+import { Show } from './shared/show';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,34 +24,38 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { Input } from './ui/input';
 import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from './ui/sidebar';
-import { Check, Pen, X } from 'lucide-react';
-import { Show } from './shared/show';
-import { Input } from './ui/input';
-import { getErrorMessage } from '@/lib/utils';
 
 const PureChatItem = ({
   chat,
   isActive,
   onDelete,
   setOpenMobile,
+  isEditing,
+  editedChatId,
+  setIsEditing,
+  setEditedChatId,
 }: {
   chat: Chat;
   isActive: boolean;
+  isEditing: boolean;
+  editedChatId: string;
   onDelete: (chatId: string) => void;
+  setIsEditing: (isEditing: boolean) => void;
+  setEditedChatId: (editedChatId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
   const { visibilityType, setVisibilityType } = useChatVisibility({
     chatId: chat.id,
     initialVisibility: chat.visibility,
   });
-  const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(chat.title);
-  const [editedChatId, setEditedChatId] = useState('');
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpdateChatName = async (chatId: string) => {
     try {
@@ -70,6 +77,7 @@ const PureChatItem = ({
       }
 
       setIsEditing(false);
+      window.location.reload();
       toast.success('Chat name updated');
       return;
     } catch (error) {
@@ -82,6 +90,14 @@ const PureChatItem = ({
     setName(chat.title);
     setEditedChatId('');
   };
+
+  useEffect(() => {
+    if (isEditing && editedChatId === chat.id) {
+      requestAnimationFrame(() => {
+        editInputRef.current?.focus();
+      });
+    }
+  }, [isEditing, editedChatId, chat.id]);
 
   return (
     <SidebarMenuItem>
@@ -103,9 +119,9 @@ const PureChatItem = ({
           <Show when={isEditing && editedChatId === chat.id}>
             <div className="flex items-center gap-1 h-6">
               <Input
+                ref={editInputRef}
                 type="text"
                 value={name}
-                autoFocus
                 className="h-6 min-h-0 px-2 py-0 text-sm"
                 onChange={(e) => setName(e.target.value)}
                 onKeyDown={(e) => {
@@ -214,5 +230,8 @@ const PureChatItem = ({
 
 export const ChatItem = memo(PureChatItem, (prevProps, nextProps) => {
   if (prevProps.isActive !== nextProps.isActive) return false;
+  if (prevProps.chat !== nextProps.chat) return false;
+  if (prevProps.isEditing !== nextProps.isEditing) return false;
+  if (prevProps.editedChatId !== nextProps.editedChatId) return false;
   return true;
 });

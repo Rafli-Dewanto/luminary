@@ -133,6 +133,8 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
   const router = useRouter();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedChatId, setEditedChatId] = useState('');
 
   const hasReachedEnd = paginatedChatHistories
     ? paginatedChatHistories.some((page) => page.hasMore === false)
@@ -263,6 +265,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            isEditing={isEditing}
+                            editedChatId={editedChatId}
+                            setIsEditing={setIsEditing}
+                            setEditedChatId={setEditedChatId}
                           />
                         ))}
                       </div>
@@ -283,6 +289,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            isEditing={isEditing}
+                            editedChatId={editedChatId}
+                            setIsEditing={setIsEditing}
+                            setEditedChatId={setEditedChatId}
                           />
                         ))}
                       </div>
@@ -303,6 +313,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            isEditing={isEditing}
+                            editedChatId={editedChatId}
+                            setIsEditing={setIsEditing}
+                            setEditedChatId={setEditedChatId}
                           />
                         ))}
                       </div>
@@ -323,6 +337,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            isEditing={isEditing}
+                            editedChatId={editedChatId}
+                            setIsEditing={setIsEditing}
+                            setEditedChatId={setEditedChatId}
                           />
                         ))}
                       </div>
@@ -343,6 +361,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
                               setShowDeleteDialog(true);
                             }}
                             setOpenMobile={setOpenMobile}
+                            isEditing={isEditing}
+                            editedChatId={editedChatId}
+                            setIsEditing={setIsEditing}
+                            setEditedChatId={setEditedChatId}
                           />
                         ))}
                       </div>
