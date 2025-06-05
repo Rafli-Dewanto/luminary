@@ -1,10 +1,11 @@
+import { openai } from '@ai-sdk/openai';
 import {
   customProvider,
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
 import { isTestEnvironment } from '../constants';
-import { openai } from '@ai-sdk/openai';
+import { google } from '@ai-sdk/google';
 import {
   artifactModel,
   chatModel,
@@ -23,13 +24,13 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': openai('gpt-4o'),
+        'chat-model': google('gemini-1.5-pro-latest'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: openai('gpt-4o'),
+          model: google('gemini-1.5-pro-latest'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': openai('gpt-4-turbo'),
-        'artifact-model': openai('gpt-4-turbo'),
+        'title-model': google('gemini-1.5-pro-latest'),
+        'artifact-model': google('gemini-1.5-pro-latest'),
       },
       imageModels: {
         'small-model': openai.image('dall-e-3'),
